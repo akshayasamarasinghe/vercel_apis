@@ -33,13 +33,13 @@ const EventSchema = new mongoose.Schema({
 const Event = mongoose.model("Event", EventSchema);
 
 // Routes
-app.get('/api/invitation/:id', async (req, res) => {
+app.get('/invitation/:id', async (req, res) => {
     const id = req?.params?.id;
     const items = await Event.findOne({_id: id});
     res.json(items);
 });
 
-app.post('/api/invitation/rsvp/:id', async (req, res) => {
+app.post('/invitation/rsvp/:id', async (req, res) => {
     const id = req?.params?.id;
     const data = req?.body;
     const event = await Event.findOneAndUpdate(
