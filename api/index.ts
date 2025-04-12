@@ -50,7 +50,7 @@ app.post('/invitation/rsvp/:id', async (req, res) => {
         const id = req?.params?.id;
         const data = req?.body;
         const selectedEvent = await Event.findOne({_id: id}).lean();
-        const rsvps = selectedEvent?.rsvps?.length > 0 ? [...selectedEvent?.rsvps, data] : [{...data}];
+        const rsvps = selectedEvent?.rsvps?.length > 0 ? [...selectedEvent?.rsvps, data] : [data];
         const event = await Event.findOneAndUpdate(
             {_id: id},
             {$set: {rsvps}},
