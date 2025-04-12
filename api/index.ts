@@ -1,3 +1,4 @@
+import cors from 'cors';
 import express from 'express';
 import mongoose, {Schema} from 'mongoose';
 
@@ -5,6 +6,7 @@ const app = express();
 
 // Middleware to parse JSON
 app.use(express.json());
+app.use(cors());
 
 const mongo_uri = "mongodb+srv://akshayadevt:PXfTdar8qu9Hjaan@cluster-i.ne1fe.mongodb.net/event-planner-web-app?retryWrites=true&w=majority"
 
@@ -37,7 +39,6 @@ app.get('/invitation/:id', async (req, res) => {
     try {
         const id = req?.params?.id;
         const items = await Event.findOne({_id: id}).lean();
-        ;
         res.json(items);
     } catch (e) {
         res.status(500).json(e);
@@ -48,9 +49,11 @@ app.post('/invitation/rsvp/:id', async (req, res) => {
     try {
         const id = req?.params?.id;
         const data = req?.body;
+        const selectedEvent = await Event.findOne({_id: id}).lean();
+        const rsvps = selectedEvent?.rsvps?.length > 0 ? [...selectedEvent?.rsvps, data] : [{...data}];
         const event = await Event.findOneAndUpdate(
             {_id: id},
-            {$set: {...data}},
+            {$set: {rsvps}},
             {new: true, runValidators: true}
         ).lean();
         res.json(event);
