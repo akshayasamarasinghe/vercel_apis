@@ -34,20 +34,29 @@ const Event = mongoose.model("Event", EventSchema);
 
 // Routes
 app.get('/invitation/:id', async (req, res) => {
-    const id = req?.params?.id;
-    const items = await Event.findOne({_id: id});
-    res.json(items);
+    try {
+        const id = req?.params?.id;
+        const items = await Event.findOne({_id: id}).lean();
+        ;
+        res.json(items);
+    } catch (e) {
+        res.status(500).json(e);
+    }
 });
 
 app.post('/invitation/rsvp/:id', async (req, res) => {
-    const id = req?.params?.id;
-    const data = req?.body;
-    const event = await Event.findOneAndUpdate(
-        {_id: id},
-        {$set: {...data}},
-        {new: true, runValidators: true}
-    )
-    res.json(event);
+    try {
+        const id = req?.params?.id;
+        const data = req?.body;
+        const event = await Event.findOneAndUpdate(
+            {_id: id},
+            {$set: {...data}},
+            {new: true, runValidators: true}
+        ).lean();
+        res.json(event);
+    } catch (e) {
+        res.status(500).json(e);
+    }
 });
 
 app.listen(3000, () => console.log('Server running on port 3000'));
