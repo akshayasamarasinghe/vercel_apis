@@ -26,7 +26,7 @@ const EventSchema = new mongoose.Schema({
     // end_time: {type: Schema.Types.Date},
     image_url: {type: Schema.Types.String},
     category: {type: [Schema.Types.String]},
-    rsvps: {type: [Schema.Types.Array]},
+    rsvps: {type: [Schema.Types.Mixed]},
 
 }, {
     timestamps: true,
@@ -50,8 +50,12 @@ app.post('/invitation/rsvp/:id', async (req, res) => {
         const id = req?.params?.id;
         const data = req?.body;
         const selectedEvent = await Event.findOne({_id: id}).lean();
+        console.log(selectedEvent, "selectedEvent");
         const modifiedRsvps = selectedEvent?.rsvps?.length > 0 ? selectedEvent?.rsvps : [];
+        console.log(modifiedRsvps, "modifiedRsvps 1");
         modifiedRsvps?.push(data);
+        console.log(data, "data");
+        console.log(modifiedRsvps, "modifiedRsvps 2");
         const event = await Event.findOneAndUpdate(
             {_id: id},
             {$set: {rsvps: modifiedRsvps}},
