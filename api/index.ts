@@ -22,8 +22,8 @@ const EventSchema = new mongoose.Schema({
     description: {type: Schema.Types.String},
     start_date: {type: Schema.Types.Date},
     end_date: {type: Schema.Types.Date},
-    // start_time: {type: Schema.Types.Date},
-    // end_time: {type: Schema.Types.Date},
+    start_time: {type: Schema.Types.String},
+    end_time: {type: Schema.Types.String},
     image_url: {type: Schema.Types.String},
     category: {type: [Schema.Types.String]},
     rsvps: {type: [Schema.Types.Mixed]},
@@ -34,14 +34,29 @@ const EventSchema = new mongoose.Schema({
 });
 const Event = mongoose.model("Event", EventSchema);
 
+const UserSchema = new mongoose.Schema({
+    organization_id: {type: Schema.Types.ObjectId, ref: "organizations"},
+    first_name: {type: Schema.Types.String},
+    last_name: {type: Schema.Types.String},
+    email: {type: Schema.Types.String, unique: true},
+    phone_no: {type: Schema.Types.String},
+    type: {type: Schema.Types.String},
+    password: {type: Schema.Types.String},
+
+}, {
+    timestamps: true,
+    collection: "users",
+});
+const User = mongoose.model("User", UserSchema);
+
 // Routes
 app.get('/invitation/:id', async (req, res) => {
     try {
         const id = req?.params?.id;
         const items = await Event.findOne({_id: id}).lean();
-        res.json(items);
+        return res.json(items);
     } catch (e) {
-        res.status(500).json(e);
+        throw res.status(500).json(e);
     }
 });
 
@@ -49,21 +64,27 @@ app.post('/invitation/rsvp/:id', async (req, res) => {
     try {
         const id = req?.params?.id;
         const data = req?.body;
+        let existingUser: any = {};
         const selectedEvent = await Event.findOne({_id: id}).lean();
-        console.log(selectedEvent, "selectedEvent");
         const modifiedRsvps = selectedEvent?.rsvps?.length > 0 ? selectedEvent?.rsvps : [];
-        console.log(modifiedRsvps, "modifiedRsvps 1");
-        modifiedRsvps?.push(data);
-        console.log(data, "data");
-        console.log(modifiedRsvps, "modifiedRsvps 2");
+        if (data?.email && modifiedRsvps?.length > 0) {
+            const isExist = modifiedRsvps?.find((rsvp: any) => rsvp?.email === data?.email);
+            if (isExist) {
+                return res.json({message: "User is already responded to this invitation!"})
+            }
+        }
+        if (data?.email) {
+            existingUser = await User.findOne({email: data?.email}).lean();
+        }
+        modifiedRsvps?.push({...data, user: existingUser?._id ? existingUser?._id : undefined});
         const event = await Event.findOneAndUpdate(
             {_id: id},
             {$set: {rsvps: modifiedRsvps}},
             {new: true, runValidators: true}
         ).lean();
-        res.json(event);
+        return res.json(event);
     } catch (e) {
-        res.status(500).json(e);
+        throw res.status(500).json(e);
     }
 });
 
